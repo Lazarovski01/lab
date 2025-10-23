@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xwiki
+  namespace: xwiki
+  labels:
+    app: xwiki
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: xwiki
+  template:
+    metadata:
+      labels:
+        app: xwiki
+        name: xwiki
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: <NODE_NAME>
+      initContainers:
+        - name: prepare-webinf
+          image: xwiki:stable-postgres-tomcat
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -e
+              SRC="/usr/local/tomcat/webapps/ROOT/WEB-INF"
+              DST="/work/WEB-INF"
+              mkdir -p "$DST"
+              cp -a "$SRC/." "$DST/"
+              cp /config/hibernate.cfg.xml "$DST/hibernate.cfg.xml"
+              if [ -f /config/xwiki.cfg ]; then cp /config/xwiki.cfg "$DST/xwiki.cfg"; fi
+          volumeMounts:
+            - name: webinf
+              mountPath: /work/WEB-INF
+            - name: xwiki-hibernate
+              mountPath: /config
+              readOnly: true
+      containers:
+        - name: xwiki
+          image: xwiki:stable-postgres-tomcat
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: DB_HOST
+              value: "<HOSTNAME_OR_IP_OF_MACHINE_HOSTING_DB>"
+            - name: DB_DATABASE
+              value: "xwiki"
+            - name: DB_USER
+              value: "xwiki"
+            - name: DB_PASSWORD
+              value: "xwiki"
+          volumeMounts:
+            - name: data
+              mountPath: /usr/local/xwiki
+            - name: webinf
+              mountPath: /usr/local/tomcat/webapps/ROOT/WEB-INF
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: xwiki-data
+        - name: xwiki-hibernate
+          configMap:
+            name: xwiki-hibernate
+        - name: webinf
+          emptyDir: {}

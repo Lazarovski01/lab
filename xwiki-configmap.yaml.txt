@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: xwiki-hibernate
+  namespace: xwiki
+data:
+  hibernate.cfg.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE hibernate-configuration PUBLIC
+      "-//Hibernate/Hibernate Configuration DTD//EN"
+      "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+    <hibernate-configuration>
+      <session-factory>
+        <property name="show_sql">false</property>
+        <property name="use_outer_join">true</property>
+        <property name="jdbc.use_scrollable_resultset">false</property>
+        <property name="dbcp.defaultAutoCommit">false</property>
+        <property name="dbcp.maxTotal">50</property>
+        <property name="dbcp.maxIdle">5</property>
+        <property name="dbcp.maxWaitMillis">30000</property>
+        <property name="connection.provider_class">com.xpn.xwiki.store.DBCPConnectionProvider</property>
+
+        <property name="connection.url">jdbc:postgresql://<host>:<port>/<dbname></property>
+        <property name="connection.username">xwiki</property>
+        <property name="connection.password">xwiki</property>
+        <property name="connection.driver_class">org.postgresql.Driver</property>
+        <property name="jdbc.use_streams_for_binary">false</property>
+        <property name="xwiki.virtual_mode">schema</property>
+
+        <property name="hibernate.connection.charSet">UTF-8</property>
+        <property name="hibernate.connection.useUnicode">true</property>
+        <property name="hibernate.connection.characterEncoding">utf8</property>
+
+        <mapping resource="xwiki.postgresql.hbm.xml"/>
+        <mapping resource="feeds.hbm.xml"/>
+        <mapping resource="instance.hbm.xml"/>
+        <mapping resource="notification-filter-preferences.hbm.xml"/>
+        <mapping resource="mailsender.hbm.xml"/>
+      </session-factory>
+    </hibernate-configuration>
+  xwiki.cfg: |
+    # ========================
+    # AUTH: LDAP (Active Directory)
+    # ========================
+    xwiki.authentication.authclass=org.xwiki.contrib.ldap.XWikiLDAPAuthServiceImpl
+    xwiki.authentication.ldap=1
+    xwiki.authentication.ldap.trylocal=1
+    xwiki.authentication.ldap.server=<host>
+    xwiki.authentication.ldap.port=389
+    xwiki.authentication.ldap.base_DN=<base>
+    xwiki.authentication.ldap.bind_DN=CN=<bind>
+    xwiki.authentication.ldap.bind_pass=<pass>
+    xwiki.authentication.ldap.UID_attr=sAMAccountName
+    xwiki.authentication.ldap.fields_mapping=last_name=sn,first_name=givenName,email=mail
+    xwiki.authentication.ldap.update_user=1
+    xwiki.authentication.ldap.start_tls=0
+    xwiki.authentication.ldap.ssl=0
+
+    # ========================
+    # SUPERADMIN
+    # ========================
+    xwiki.superadminpassword=<superadminpassword>
+
+    xwiki.encoding=UTF-8
+    xwiki.section.edit=1
+    xwiki.section.depth=2
+    xwiki.backlinks=1
+    xwiki.tags=1
+    xwiki.store.migration=1
+    xwiki.defaultskin=flamingo
+    xwiki.defaultbaseskin=flamingo
+    xwiki.plugins=\
+      com.xpn.xwiki.monitor.api.MonitorPlugin,\
+      com.xpn.xwiki.plugin.skinx.JsSkinExtensionPlugin,\
+      com.xpn.xwiki.plugin.skinx.JsSkinFileExtensionPlugin,\
+      com.xpn.xwiki.plugin.skinx.JsResourceSkinExtensionPlugin,\
+      com.xpn.xwiki.plugin.skinx.CssSkinExtensionPlugin,\
+      com.xpn.xwiki.plugin.skinx.CssSkinFileExtensionPlugin,\
+      com.xpn.xwiki.plugin.skinx.CssResourceSkinExtensionPlugin,\
+      com.xpn.xwiki.plugin.skinx.LinkExtensionPlugin,\
+      com.xpn.xwiki.plugin.feed.FeedPlugin,\
+      com.xpn.xwiki.plugin.packaging.PackagePlugin,\
+      com.xpn.xwiki.plugin.fileupload.FileUploadPlugin,\
+      com.xpn.xwiki.plugin.image.ImagePlugin,\
+      com.xpn.xwiki.plugin.rightsmanager.RightsManagerPlugin,\
+      com.xpn.xwiki.plugin.jodatime.JodaTimePlugin,\
+      com.xpn.xwiki.plugin.scheduler.SchedulerPlugin,\
+      com.xpn.xwiki.plugin.mailsender.MailSenderPlugin,\
+      com.xpn.xwiki.plugin.tag.TagPlugin,\
+      com.xpn.xwiki.plugin.zipexplorer.ZipExplorerPlugin
+    xwiki.plugin.image.cache.capacity=30
+    xwiki.stats.default=0
+    xwiki.authentication.cookiedomains=
+    xwiki.authentication.logoutpage=(/|/[^/]+/|/wiki/[^/]+/)logout/*
+    xwiki.webapppath=
+
+    # “Inactive user” allowed pages
+    xwiki.inactiveuser.allowedpages=

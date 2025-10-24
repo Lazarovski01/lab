@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: op-web
+  namespace: openproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openproject
+      tier: web
+  template:
+    metadata:
+      labels:
+        app: openproject
+        tier: web
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: "<HOSTNAME>"
+      securityContext:
+        fsGroup: 1010
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: web
+          image: openproject/openproject:16-slim
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: op-config
+            - secretRef:
+                name: op-secrets
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: assets
+              mountPath: /var/openproject/assets
+          readinessProbe:
+            httpGet:
+              path: /health_checks/default
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health_checks/puma
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: op-assets

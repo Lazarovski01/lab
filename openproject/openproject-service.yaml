@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: op-web
+  namespace: openproject
+spec:
+  selector: 
+    app: openproject
+    tier: web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080

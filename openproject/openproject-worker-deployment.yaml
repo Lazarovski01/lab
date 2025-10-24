@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: op-worker
+  namespace: openproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels: 
+      app: openproject
+      tier: worker
+  template:
+    metadata:
+      labels: 
+        app: openproject
+        tier: worker
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: "<HOSTNAME>"
+      securityContext:
+        fsGroup: 1010
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: worker
+          image: openproject/openproject:16-slim
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef: 
+                name: op-config
+            - secretRef:
+                name: op-secrets
+          command: ["bash","-lc","RAILS_ENV=production bundle exec good_job start"]
+          volumeMounts:
+            - name: assets
+              mountPath: /var/openproject/assets
+          livenessProbe:
+            exec:
+              command: ["bash","-lc","pgrep -f 'good_job start' >/dev/null"]
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: op-assets

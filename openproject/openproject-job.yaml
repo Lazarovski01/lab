@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: op-migrate
+  namespace: openproject
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: "<HOSTNAME>"
+      securityContext:
+        fsGroup: 1010
+        fsGroupChangePolicy: OnRootMismatch
+      containers:
+        - name: migrate
+          image: openproject/openproject:16-slim
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef: 
+                name: op-config
+            - secretRef:
+                name: op-secrets
+          command: ["bash","-lc","./docker/prod/seeder"]
+          volumeMounts:
+            - name: assets
+              mountPath: /var/openproject/assets
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: op-assets
